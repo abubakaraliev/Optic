@@ -4,13 +4,13 @@ import { PieChart } from '../components/PieChart';
 import { ProgressBar } from '../components/ProgressBar';
 import { BottomNav } from '../components/BottomNav';
 import { databaseService } from '../services';
-import type { DashboardStats, CategoryExpense } from '../types';
+import type { DashboardStats } from '../types';
 
 interface DashboardScreenProps {
   userId: string;
 }
 
-const COLORS = ['#6366F1', '#8B5CF6', '#EC4899', '#F43F5E', '#F97316', '#EAB308', '#22C55E', '#14B8A6'];
+const CHART_COLORS = ['#448AFF', '#00D09E', '#FFB340', '#FF5252', '#8B5CF6', '#EC4899', '#F97316', '#6366F1'];
 
 const MOCK_STATS: DashboardStats = {
   totalExpenses: 850,
@@ -47,6 +47,12 @@ export const DashboardScreen: React.FC<DashboardScreenProps> = ({ userId }) => {
 
   const onRefresh = () => { setRefreshing(true); loadStats(); };
 
+  const getStatusColor = (percentage: number) => {
+    if (percentage >= 100) return '#FF5252';
+    if (percentage >= 80) return '#FFB340';
+    return '#00D09E';
+  };
+
   if (loading) {
     return (
       <SafeAreaView style={styles.loadingContainer}>
@@ -68,11 +74,11 @@ export const DashboardScreen: React.FC<DashboardScreenProps> = ({ userId }) => {
       <ScrollView
         style={styles.scrollView}
         showsVerticalScrollIndicator={false}
-        refreshControl={<RefreshControl refreshing={refreshing} onRefresh={onRefresh} tintColor="#6366F1" />}
+        refreshControl={<RefreshControl refreshing={refreshing} onRefresh={onRefresh} tintColor="#00D09E" />}
       >
         <View style={styles.resteCard}>
           <Text style={styles.resteLabel}>Reste à vivre</Text>
-          <Text style={[styles.resteValue, { color: isPositive ? '#22C55E' : '#EF4444' }]}>
+          <Text style={[styles.resteValue, { color: isPositive ? '#00D09E' : '#FF5252' }]}>
             {resteAVivre.toFixed(0)}€
           </Text>
           <Text style={styles.resteSubtext}>
@@ -81,13 +87,13 @@ export const DashboardScreen: React.FC<DashboardScreenProps> = ({ userId }) => {
         </View>
 
         <View style={styles.statsRow}>
-          <View style={[styles.statCard, { backgroundColor: '#FEF3C7' }]}>
-            <Text style={[styles.statLabel, { color: '#92400E' }]}>Dépenses</Text>
-            <Text style={[styles.statValue, { color: '#92400E' }]}>{stats?.totalExpenses.toFixed(0) || 0}€</Text>
+          <View style={[styles.statCard, { backgroundColor: '#FFECEC' }]}>
+            <Text style={[styles.statLabel, { color: '#FF5252' }]}>Dépenses</Text>
+            <Text style={[styles.statValue, { color: '#FF5252' }]}>{stats?.totalExpenses.toFixed(0) || 0}€</Text>
           </View>
-          <View style={[styles.statCard, { backgroundColor: '#DBEAFE' }]}>
-            <Text style={[styles.statLabel, { color: '#1E40AF' }]}>Budget</Text>
-            <Text style={[styles.statValue, { color: '#1E40AF' }]}>{stats?.totalBudget.toFixed(0) || 0}€</Text>
+          <View style={[styles.statCard, { backgroundColor: '#E3F2FD' }]}>
+            <Text style={[styles.statLabel, { color: '#448AFF' }]}>Budget</Text>
+            <Text style={[styles.statValue, { color: '#448AFF' }]}>{stats?.totalBudget.toFixed(0) || 0}€</Text>
           </View>
         </View>
 
@@ -105,14 +111,14 @@ export const DashboardScreen: React.FC<DashboardScreenProps> = ({ userId }) => {
               <View key={item.categoryId} style={styles.categoryItem}>
                 <View style={styles.categoryHeader}>
                   <View style={styles.categoryInfo}>
-                    <View style={[styles.categoryDot, { backgroundColor: COLORS[index % COLORS.length] }]} />
+                    <View style={[styles.categoryDot, { backgroundColor: CHART_COLORS[index % CHART_COLORS.length] }]} />
                     <Text style={styles.categoryName}>{item.categoryName}</Text>
                   </View>
                   <Text style={styles.categoryAmount}>{item.spent.toFixed(0)}€ / {item.budget.toFixed(0)}€</Text>
                 </View>
                 <ProgressBar
                   progress={item.percentage}
-                  color={COLORS[index % COLORS.length]}
+                  color={getStatusColor(item.percentage)}
                   height={8}
                 />
               </View>
@@ -144,7 +150,7 @@ const styles = StyleSheet.create({
   loadingText: { fontSize: 16, color: '#64748B' },
   header: { paddingHorizontal: 20, paddingTop: 16, paddingBottom: 20, backgroundColor: '#FFFFFF' },
   greeting: { fontSize: 14, color: '#64748B', marginBottom: 4 },
-  headerTitle: { fontSize: 28, fontWeight: '700', color: '#0F172A' },
+  headerTitle: { fontSize: 28, fontWeight: '700', color: '#1E293B' },
   scrollView: { flex: 1 },
   resteCard: { margin: 20, marginBottom: 12, padding: 24, backgroundColor: '#FFFFFF', borderRadius: 24, alignItems: 'center', shadowColor: '#000', shadowOffset: { width: 0, height: 2 }, shadowOpacity: 0.05, shadowRadius: 10, elevation: 2 },
   resteLabel: { fontSize: 14, color: '#64748B', marginBottom: 8 },
@@ -155,15 +161,15 @@ const styles = StyleSheet.create({
   statLabel: { fontSize: 12, fontWeight: '600', marginBottom: 4 },
   statValue: { fontSize: 22, fontWeight: '700' },
   card: { margin: 20, marginTop: 12, padding: 20, backgroundColor: '#FFFFFF', borderRadius: 24, shadowColor: '#000', shadowOffset: { width: 0, height: 2 }, shadowOpacity: 0.05, shadowRadius: 10, elevation: 2 },
-  cardTitle: { fontSize: 18, fontWeight: '600', color: '#0F172A', marginBottom: 20 },
+  cardTitle: { fontSize: 18, fontWeight: '600', color: '#1E293B', marginBottom: 20 },
   chartContainer: { alignItems: 'center', marginVertical: 8 },
   categoryList: { gap: 16 },
   categoryItem: { gap: 8 },
   categoryHeader: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' },
   categoryInfo: { flexDirection: 'row', alignItems: 'center', gap: 10 },
   categoryDot: { width: 10, height: 10, borderRadius: 5 },
-  categoryName: { fontSize: 15, fontWeight: '500', color: '#334155' },
+  categoryName: { fontSize: 15, fontWeight: '500', color: '#1E293B' },
   categoryAmount: { fontSize: 13, color: '#64748B' },
-  exportButton: { marginHorizontal: 20, padding: 16, backgroundColor: '#6366F1', borderRadius: 16, alignItems: 'center' },
+  exportButton: { marginHorizontal: 20, padding: 16, backgroundColor: '#1E293B', borderRadius: 16, alignItems: 'center' },
   exportButtonText: { color: '#FFFFFF', fontSize: 16, fontWeight: '600' },
 });

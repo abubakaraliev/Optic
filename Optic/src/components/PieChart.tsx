@@ -9,8 +9,8 @@ interface PieChartProps {
 }
 
 const COLORS = [
-  '#6366F1', '#8B5CF6', '#EC4899', '#F43F5E',
-  '#F97316', '#EAB308', '#22C55E', '#14B8A6'
+  '#448AFF', '#00D09E', '#FFB340', '#FF5252',
+  '#8B5CF6', '#EC4899', '#F97316', '#6366F1'
 ];
 
 export const PieChart: React.FC<PieChartProps> = ({ data, size = 220 }) => {

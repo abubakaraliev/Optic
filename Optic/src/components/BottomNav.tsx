@@ -68,7 +68,7 @@ const styles = StyleSheet.create({
     marginBottom: 4,
   },
   activeIcon: {
-    color: '#6366F1',
+    color: '#00D09E',
   },
   label: {
     fontSize: 11,
@@ -76,7 +76,7 @@ const styles = StyleSheet.create({
     fontWeight: '500',
   },
   activeLabel: {
-    color: '#6366F1',
+    color: '#00D09E',
     fontWeight: '600',
   },
   indicator: {
@@ -84,7 +84,7 @@ const styles = StyleSheet.create({
     bottom: 0,
     width: 24,
     height: 3,
-    backgroundColor: '#6366F1',
+    backgroundColor: '#00D09E',
     borderRadius: 2,
   },
 });
