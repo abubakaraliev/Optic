@@ -9,22 +9,27 @@ interface PieChartProps {
 }
 
 const COLORS = [
-  '#FF6B6B', '#4ECDC4', '#45B7D1', '#96CEB4', 
-  '#FFEAA7', '#DDA0DD', '#98D8C8', '#F7DC6F'
+  '#6366F1', '#8B5CF6', '#EC4899', '#F43F5E',
+  '#F97316', '#EAB308', '#22C55E', '#14B8A6'
 ];
 
-export const PieChart: React.FC<PieChartProps> = ({ data, size = 200 }) => {
+export const PieChart: React.FC<PieChartProps> = ({ data, size = 220 }) => {
+  const innerRadius = size / 3;
+  const outerRadius = (size / 2) - 16;
+  const centerX = size / 2;
+  const centerY = size / 2;
+
   if (data.length === 0) {
     return (
       <View style={[styles.container, { width: size, height: size }]}>
         <Svg width={size} height={size} viewBox={`0 0 ${size} ${size}`}>
           <Circle
-            cx={size / 2}
-            cy={size / 2}
-            r={size / 2 - 10}
+            cx={centerX}
+            cy={centerY}
+            r={outerRadius}
             fill="none"
-            stroke="#E0E0E0"
-            strokeWidth={20}
+            stroke="#E2E8F0"
+            strokeWidth={(outerRadius - innerRadius)}
           />
         </Svg>
         <View style={styles.centerText}>
@@ -35,10 +40,6 @@ export const PieChart: React.FC<PieChartProps> = ({ data, size = 200 }) => {
   }
 
   const total = data.reduce((sum, item) => sum + item.spent, 0);
-  const radius = (size / 2) - 20;
-  const centerX = size / 2;
-  const centerY = size / 2;
-
   let startAngle = -90;
 
   const slices = data.map((item, index) => {
@@ -49,17 +50,23 @@ export const PieChart: React.FC<PieChartProps> = ({ data, size = 200 }) => {
     const startRad = (startAngle * Math.PI) / 180;
     const endRad = (endAngle * Math.PI) / 180;
 
-    const x1 = centerX + radius * Math.cos(startRad);
-    const y1 = centerY + radius * Math.sin(startRad);
-    const x2 = centerX + radius * Math.cos(endRad);
-    const y2 = centerY + radius * Math.sin(endRad);
+    const x1 = centerX + outerRadius * Math.cos(startRad);
+    const y1 = centerY + outerRadius * Math.sin(startRad);
+    const x2 = centerX + outerRadius * Math.cos(endRad);
+    const y2 = centerY + outerRadius * Math.sin(endRad);
+
+    const x3 = centerX + innerRadius * Math.cos(endRad);
+    const y3 = centerY + innerRadius * Math.sin(endRad);
+    const x4 = centerX + innerRadius * Math.cos(startRad);
+    const y4 = centerY + innerRadius * Math.sin(startRad);
 
     const largeArc = angle > 180 ? 1 : 0;
 
     const pathData = [
-      `M ${centerX} ${centerY}`,
-      `L ${x1} ${y1}`,
-      `A ${radius} ${radius} 0 ${largeArc} 1 ${x2} ${y2}`,
+      `M ${x1} ${y1}`,
+      `A ${outerRadius} ${outerRadius} 0 ${largeArc} 1 ${x2} ${y2}`,
+      `L ${x3} ${y3}`,
+      `A ${innerRadius} ${innerRadius} 0 ${largeArc} 0 ${x4} ${y4}`,
       'Z'
     ].join(' ');
 
@@ -100,15 +107,16 @@ const styles = StyleSheet.create({
   },
   totalLabel: {
     fontSize: 14,
-    color: '#666',
+    color: '#64748B',
+    fontWeight: '500',
   },
   totalAmount: {
-    fontSize: 20,
-    fontWeight: 'bold',
-    color: '#333',
+    fontSize: 28,
+    fontWeight: '700',
+    color: '#1E293B',
   },
   emptyText: {
     fontSize: 14,
-    color: '#999',
+    color: '#94A3B8',
   },
 });

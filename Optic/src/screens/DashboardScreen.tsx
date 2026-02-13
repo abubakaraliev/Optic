@@ -1,6 +1,8 @@
 import React, { useState, useEffect } from 'react';
-import { View, Text, StyleSheet, ScrollView, RefreshControl, TouchableOpacity } from 'react-native';
+import { View, Text, StyleSheet, ScrollView, RefreshControl, TouchableOpacity, SafeAreaView } from 'react-native';
 import { PieChart } from '../components/PieChart';
+import { ProgressBar } from '../components/ProgressBar';
+import { BottomNav } from '../components/BottomNav';
 import { databaseService } from '../services';
 import type { DashboardStats, CategoryExpense } from '../types';
 
@@ -8,10 +10,7 @@ interface DashboardScreenProps {
   userId: string;
 }
 
-const COLORS = [
-  '#FF6B6B', '#4ECDC4', '#45B7D1', '#96CEB4', 
-  '#FFEAA7', '#DDA0DD', '#98D8C8', '#F7DC6F'
-];
+const COLORS = ['#6366F1', '#8B5CF6', '#EC4899', '#F43F5E', '#F97316', '#EAB308', '#22C55E', '#14B8A6'];
 
 const MOCK_STATS: DashboardStats = {
   totalExpenses: 850,
@@ -29,14 +28,14 @@ export const DashboardScreen: React.FC<DashboardScreenProps> = ({ userId }) => {
   const [stats, setStats] = useState<DashboardStats | null>(null);
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
-  const [isDemo] = useState(userId === '00000000-0000-0000-0000-000000000000');
+  const [activeTab, setActiveTab] = useState('dashboard');
 
   const loadStats = async () => {
     try {
       const data = await databaseService.getDashboardStats(userId);
       setStats(data);
     } catch (error) {
-      console.log('Using demo data (Supabase not configured)');
+      console.log('Using demo data');
       setStats(MOCK_STATS);
     } finally {
       setLoading(false);
@@ -44,240 +43,127 @@ export const DashboardScreen: React.FC<DashboardScreenProps> = ({ userId }) => {
     }
   };
 
-  useEffect(() => {
-    loadStats();
-  }, [userId]);
+  useEffect(() => { loadStats(); }, [userId]);
 
-  const onRefresh = () => {
-    setRefreshing(true);
-    loadStats();
-  };
-
-  const getBudgetAlert = (expense: CategoryExpense) => {
-    if (expense.budget > 0 && expense.percentage >= 80) {
-      return { color: '#FF6B6B', message: '⚠️ Alerte budget' };
-    }
-    return null;
-  };
+  const onRefresh = () => { setRefreshing(true); loadStats(); };
 
   if (loading) {
     return (
-      <View style={styles.loadingContainer}>
-        <Text>Chargement...</Text>
-      </View>
+      <SafeAreaView style={styles.loadingContainer}>
+        <Text style={styles.loadingText}>Chargement...</Text>
+      </SafeAreaView>
     );
   }
 
+  const resteAVivre = stats?.resteAVivre || 0;
+  const isPositive = resteAVivre >= 0;
+
   return (
-    <ScrollView
-      style={styles.container}
-      refreshControl={
-        <RefreshControl refreshing={refreshing} onRefresh={onRefresh} />
-      }
-    >
+    <SafeAreaView style={styles.container}>
       <View style={styles.header}>
-        <Text style={styles.title}>Dashboard</Text>
-        <Text style={styles.subtitle}>
-          {new Date().toLocaleDateString('fr-FR', { month: 'long', year: 'numeric' })}
-        </Text>
+        <Text style={styles.greeting}>Bonjour 👋</Text>
+        <Text style={styles.headerTitle}>Vos finances</Text>
       </View>
 
-      <View style={styles.card}>
-        <Text style={styles.cardTitle}>Répartition des dépenses</Text>
-        <View style={styles.chartContainer}>
-          <PieChart data={stats?.expensesByCategory || []} size={200} />
+      <ScrollView
+        style={styles.scrollView}
+        showsVerticalScrollIndicator={false}
+        refreshControl={<RefreshControl refreshing={refreshing} onRefresh={onRefresh} tintColor="#6366F1" />}
+      >
+        <View style={styles.resteCard}>
+          <Text style={styles.resteLabel}>Reste à vivre</Text>
+          <Text style={[styles.resteValue, { color: isPositive ? '#22C55E' : '#EF4444' }]}>
+            {resteAVivre.toFixed(0)}€
+          </Text>
+          <Text style={styles.resteSubtext}>
+            {isPositive ? 'Bonne santé financière' : 'Attention au dépassement'}
+          </Text>
         </View>
-        <View style={styles.legend}>
-          {stats?.expensesByCategory.map((item, index) => {
-            const alert = getBudgetAlert(item);
-            return (
-              <View key={item.categoryId} style={styles.legendItem}>
-                <View style={[styles.legendColor, { backgroundColor: COLORS[index % COLORS.length] }]} />
-                <Text style={styles.legendText}>
-                  {item.categoryIcon} {item.categoryName}
-                </Text>
-                <Text style={[styles.legendAmount, alert && { color: alert.color }]}>
-                  {item.spent.toFixed(0)}€
-                </Text>
-                {alert && <Text style={[styles.alertText, { color: alert.color }]}>{alert.message}</Text>}
+
+        <View style={styles.statsRow}>
+          <View style={[styles.statCard, { backgroundColor: '#FEF3C7' }]}>
+            <Text style={[styles.statLabel, { color: '#92400E' }]}>Dépenses</Text>
+            <Text style={[styles.statValue, { color: '#92400E' }]}>{stats?.totalExpenses.toFixed(0) || 0}€</Text>
+          </View>
+          <View style={[styles.statCard, { backgroundColor: '#DBEAFE' }]}>
+            <Text style={[styles.statLabel, { color: '#1E40AF' }]}>Budget</Text>
+            <Text style={[styles.statValue, { color: '#1E40AF' }]}>{stats?.totalBudget.toFixed(0) || 0}€</Text>
+          </View>
+        </View>
+
+        <View style={styles.card}>
+          <Text style={styles.cardTitle}>Répartition</Text>
+          <View style={styles.chartContainer}>
+            <PieChart data={stats?.expensesByCategory || []} size={220} />
+          </View>
+        </View>
+
+        <View style={styles.card}>
+          <Text style={styles.cardTitle}>Par catégorie</Text>
+          <View style={styles.categoryList}>
+            {stats?.expensesByCategory.map((item, index) => (
+              <View key={item.categoryId} style={styles.categoryItem}>
+                <View style={styles.categoryHeader}>
+                  <View style={styles.categoryInfo}>
+                    <View style={[styles.categoryDot, { backgroundColor: COLORS[index % COLORS.length] }]} />
+                    <Text style={styles.categoryName}>{item.categoryName}</Text>
+                  </View>
+                  <Text style={styles.categoryAmount}>{item.spent.toFixed(0)}€ / {item.budget.toFixed(0)}€</Text>
+                </View>
+                <ProgressBar
+                  progress={item.percentage}
+                  color={COLORS[index % COLORS.length]}
+                  height={8}
+                />
               </View>
-            );
-          })}
+            ))}
+          </View>
         </View>
-      </View>
 
-      <View style={styles.statsRow}>
-        <View style={[styles.statCard, styles.expensesCard]}>
-          <Text style={styles.statLabel}>Total Dépenses</Text>
-          <Text style={styles.statValue}>{stats?.totalExpenses.toFixed(2) || 0}€</Text>
-        </View>
-        <View style={[styles.statCard, styles.budgetCard]}>
-          <Text style={styles.statLabel}>Budget Total</Text>
-          <Text style={styles.statValue}>{stats?.totalBudget.toFixed(2) || 0}€</Text>
-        </View>
-      </View>
+        <TouchableOpacity style={styles.exportButton} onPress={async () => {
+          try {
+            const csv = await databaseService.exportToCSV(userId);
+            console.log('CSV Export:', csv);
+            alert('Export CSV généré (voir console)');
+          } catch (error) { console.error('Export error:', error); }
+        }}>
+          <Text style={styles.exportButtonText}>Exporter en CSV</Text>
+        </TouchableOpacity>
 
-      <View style={[styles.card, styles.resteCard]}>
-        <Text style={styles.cardTitle}>Reste à vivre</Text>
-        <Text style={[
-          styles.resteValue,
-          { color: (stats?.resteAVivre || 0) >= 0 ? '#4ECDC4' : '#FF6B6B' }
-        ]}>
-          {stats?.resteAVivre.toFixed(2) || 0}€
-        </Text>
-        <Text style={styles.resteSubtext}>
-          {(stats?.resteAVivre || 0) >= 0 
-            ? '💰 Vous êtes dans les verts !' 
-            : '⚠️ Dépasse le budget'}
-        </Text>
-      </View>
+        <View style={{ height: 20 }} />
+      </ScrollView>
 
-      <TouchableOpacity style={styles.exportButton} onPress={async () => {
-        try {
-          const csv = await databaseService.exportToCSV(userId);
-          console.log('CSV Export:', csv);
-          alert('Export CSV généré (voir console)');
-        } catch (error) {
-          console.error('Export error:', error);
-        }
-      }}>
-        <Text style={styles.exportButtonText}>📥 Exporter en CSV</Text>
-      </TouchableOpacity>
-    </ScrollView>
+      <BottomNav activeTab={activeTab} onTabPress={setActiveTab} />
+    </SafeAreaView>
   );
 };
 
 const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    backgroundColor: '#F5F6FA',
-  },
-  loadingContainer: {
-    flex: 1,
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  header: {
-    padding: 20,
-    paddingTop: 40,
-    backgroundColor: '#4ECDC4',
-  },
-  title: {
-    fontSize: 28,
-    fontWeight: 'bold',
-    color: '#fff',
-  },
-  subtitle: {
-    fontSize: 16,
-    color: 'rgba(255,255,255,0.8)',
-    marginTop: 4,
-  },
-  card: {
-    backgroundColor: '#fff',
-    borderRadius: 16,
-    padding: 20,
-    margin: 16,
-    marginTop: 0,
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.1,
-    shadowRadius: 8,
-    elevation: 3,
-  },
-  cardTitle: {
-    fontSize: 18,
-    fontWeight: '600',
-    color: '#333',
-    marginBottom: 16,
-  },
-  chartContainer: {
-    alignItems: 'center',
-    marginVertical: 16,
-  },
-  legend: {
-    marginTop: 16,
-  },
-  legendItem: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    paddingVertical: 8,
-    borderBottomWidth: 1,
-    borderBottomColor: '#F0F0F0',
-  },
-  legendColor: {
-    width: 12,
-    height: 12,
-    borderRadius: 6,
-    marginRight: 8,
-  },
-  legendText: {
-    flex: 1,
-    fontSize: 14,
-    color: '#555',
-  },
-  legendAmount: {
-    fontSize: 14,
-    fontWeight: '600',
-    color: '#333',
-  },
-  alertText: {
-    fontSize: 10,
-    marginLeft: 8,
-  },
-  statsRow: {
-    flexDirection: 'row',
-    paddingHorizontal: 16,
-    gap: 12,
-  },
-  statCard: {
-    flex: 1,
-    borderRadius: 16,
-    padding: 16,
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.1,
-    shadowRadius: 8,
-    elevation: 3,
-  },
-  expensesCard: {
-    backgroundColor: '#FF6B6B',
-  },
-  budgetCard: {
-    backgroundColor: '#45B7D1',
-  },
-  statLabel: {
-    fontSize: 12,
-    color: 'rgba(255,255,255,0.8)',
-    marginBottom: 4,
-  },
-  statValue: {
-    fontSize: 24,
-    fontWeight: 'bold',
-    color: '#fff',
-  },
-  resteCard: {
-    alignItems: 'center',
-  },
-  resteValue: {
-    fontSize: 36,
-    fontWeight: 'bold',
-  },
-  resteSubtext: {
-    fontSize: 14,
-    color: '#666',
-    marginTop: 8,
-  },
-  exportButton: {
-    backgroundColor: '#4ECDC4',
-    marginHorizontal: 16,
-    marginBottom: 32,
-    padding: 16,
-    borderRadius: 12,
-    alignItems: 'center',
-  },
-  exportButtonText: {
-    color: '#fff',
-    fontSize: 16,
-    fontWeight: '600',
-  },
+  container: { flex: 1, backgroundColor: '#F8FAFC' },
+  loadingContainer: { flex: 1, alignItems: 'center', justifyContent: 'center', backgroundColor: '#F8FAFC' },
+  loadingText: { fontSize: 16, color: '#64748B' },
+  header: { paddingHorizontal: 20, paddingTop: 16, paddingBottom: 20, backgroundColor: '#FFFFFF' },
+  greeting: { fontSize: 14, color: '#64748B', marginBottom: 4 },
+  headerTitle: { fontSize: 28, fontWeight: '700', color: '#0F172A' },
+  scrollView: { flex: 1 },
+  resteCard: { margin: 20, marginBottom: 12, padding: 24, backgroundColor: '#FFFFFF', borderRadius: 24, alignItems: 'center', shadowColor: '#000', shadowOffset: { width: 0, height: 2 }, shadowOpacity: 0.05, shadowRadius: 10, elevation: 2 },
+  resteLabel: { fontSize: 14, color: '#64748B', marginBottom: 8 },
+  resteValue: { fontSize: 48, fontWeight: '700' },
+  resteSubtext: { fontSize: 14, color: '#94A3B8', marginTop: 8 },
+  statsRow: { flexDirection: 'row', paddingHorizontal: 20, gap: 12 },
+  statCard: { flex: 1, padding: 16, borderRadius: 20 },
+  statLabel: { fontSize: 12, fontWeight: '600', marginBottom: 4 },
+  statValue: { fontSize: 22, fontWeight: '700' },
+  card: { margin: 20, marginTop: 12, padding: 20, backgroundColor: '#FFFFFF', borderRadius: 24, shadowColor: '#000', shadowOffset: { width: 0, height: 2 }, shadowOpacity: 0.05, shadowRadius: 10, elevation: 2 },
+  cardTitle: { fontSize: 18, fontWeight: '600', color: '#0F172A', marginBottom: 20 },
+  chartContainer: { alignItems: 'center', marginVertical: 8 },
+  categoryList: { gap: 16 },
+  categoryItem: { gap: 8 },
+  categoryHeader: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' },
+  categoryInfo: { flexDirection: 'row', alignItems: 'center', gap: 10 },
+  categoryDot: { width: 10, height: 10, borderRadius: 5 },
+  categoryName: { fontSize: 15, fontWeight: '500', color: '#334155' },
+  categoryAmount: { fontSize: 13, color: '#64748B' },
+  exportButton: { marginHorizontal: 20, padding: 16, backgroundColor: '#6366F1', borderRadius: 16, alignItems: 'center' },
+  exportButtonText: { color: '#FFFFFF', fontSize: 16, fontWeight: '600' },
 });
