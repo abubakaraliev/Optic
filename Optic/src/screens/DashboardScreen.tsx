@@ -13,17 +13,31 @@ const COLORS = [
   '#FFEAA7', '#DDA0DD', '#98D8C8', '#F7DC6F'
 ];
 
+const MOCK_STATS: DashboardStats = {
+  totalExpenses: 850,
+  totalBudget: 2000,
+  resteAVivre: 1150,
+  expensesByCategory: [
+    { categoryId: '1', categoryName: 'Alimentation', categoryIcon: '🍎', spent: 320, budget: 500, percentage: 64 },
+    { categoryId: '2', categoryName: 'Transport', categoryIcon: '🚗', spent: 180, budget: 200, percentage: 90 },
+    { categoryId: '3', categoryName: 'Logement', categoryIcon: '🏠', spent: 200, budget: 1000, percentage: 20 },
+    { categoryId: '4', categoryName: 'Loisirs', categoryIcon: '🎮', spent: 150, budget: 150, percentage: 100 },
+  ]
+};
+
 export const DashboardScreen: React.FC<DashboardScreenProps> = ({ userId }) => {
   const [stats, setStats] = useState<DashboardStats | null>(null);
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
+  const [isDemo] = useState(userId === '00000000-0000-0000-0000-000000000000');
 
   const loadStats = async () => {
     try {
       const data = await databaseService.getDashboardStats(userId);
       setStats(data);
     } catch (error) {
-      console.error('Error loading stats:', error);
+      console.log('Using demo data (Supabase not configured)');
+      setStats(MOCK_STATS);
     } finally {
       setLoading(false);
       setRefreshing(false);
