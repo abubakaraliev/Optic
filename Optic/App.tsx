@@ -1,15 +1,28 @@
+import { useState } from 'react';
 import { StatusBar } from 'expo-status-bar';
 import { SafeAreaProvider, SafeAreaView } from 'react-native-safe-area-context';
-import { DashboardScreen } from './src/screens';
-
-const DEMO_USER_ID = '00000000-0000-0000-0000-000000000000';
+import { AuthScreen, DashboardScreen } from './src/screens';
 
 export default function App() {
+  const [userId, setUserId] = useState<string | null>(null);
+
+  const handleAuthSuccess = (uid: string) => {
+    setUserId(uid);
+  };
+
+  const handleSignOut = () => {
+    setUserId(null);
+  };
+
   return (
     <SafeAreaProvider>
       <SafeAreaView style={{ flex: 1 }}>
         <StatusBar style="light" />
-        <DashboardScreen userId={DEMO_USER_ID} />
+        {userId ? (
+          <DashboardScreen userId={userId} onSignOut={handleSignOut} />
+        ) : (
+          <AuthScreen onAuthSuccess={handleAuthSuccess} />
+        )}
       </SafeAreaView>
     </SafeAreaProvider>
   );

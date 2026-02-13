@@ -9,6 +9,7 @@ import type { DashboardStats } from '../types';
 
 interface DashboardScreenProps {
   userId: string;
+  onSignOut?: () => void;
 }
 
 const CHART_COLORS = ['#448AFF', '#00D09E', '#FFB340', '#FF5252', '#8B5CF6', '#EC4899', '#F97316', '#6366F1'];
@@ -27,7 +28,7 @@ const MOCK_STATS: DashboardStats = {
 
 const LOAD_TIMEOUT_MS = 10000;
 
-export const DashboardScreen: React.FC<DashboardScreenProps> = ({ userId }) => {
+export const DashboardScreen: React.FC<DashboardScreenProps> = ({ userId, onSignOut }) => {
   const [stats, setStats] = useState<DashboardStats | null>(null);
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
@@ -86,8 +87,15 @@ export const DashboardScreen: React.FC<DashboardScreenProps> = ({ userId }) => {
   return (
     <SafeAreaView style={styles.container}>
       <View style={styles.header}>
-        <Text style={styles.greeting}>Bonjour 👋</Text>
-        <Text style={styles.headerTitle}>Vos finances</Text>
+        <View>
+          <Text style={styles.greeting}>Bonjour 👋</Text>
+          <Text style={styles.headerTitle}>Vos finances</Text>
+        </View>
+        {onSignOut && (
+          <TouchableOpacity onPress={onSignOut} style={styles.logoutButton}>
+            <Text style={styles.logoutText}>Déconnexion</Text>
+          </TouchableOpacity>
+        )}
       </View>
 
       <ScrollView
@@ -168,9 +176,11 @@ const styles = StyleSheet.create({
   loadingContainer: { flex: 1, alignItems: 'center', justifyContent: 'center', backgroundColor: '#F8FAFC' },
   loadingText: { fontSize: 16, color: '#64748B' },
   loadingSubtext: { fontSize: 12, color: '#94A3B8', marginTop: 8 },
-  header: { paddingHorizontal: 20, paddingTop: 16, paddingBottom: 20, backgroundColor: '#FFFFFF' },
+  header: { paddingHorizontal: 20, paddingTop: 16, paddingBottom: 20, backgroundColor: '#FFFFFF', flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' },
   greeting: { fontSize: 14, color: '#64748B', marginBottom: 4 },
   headerTitle: { fontSize: 28, fontWeight: '700', color: '#1E293B' },
+  logoutButton: { backgroundColor: '#F1F5F9', paddingHorizontal: 12, paddingVertical: 8, borderRadius: 8 },
+  logoutText: { color: '#64748B', fontSize: 12, fontWeight: '500' },
   scrollView: { flex: 1 },
   resteCard: { margin: 20, marginBottom: 12, padding: 24, backgroundColor: '#FFFFFF', borderRadius: 24, alignItems: 'center', shadowColor: '#000', shadowOffset: { width: 0, height: 2 }, shadowOpacity: 0.05, shadowRadius: 10, elevation: 2 },
   resteLabel: { fontSize: 14, color: '#64748B', marginBottom: 8 },
