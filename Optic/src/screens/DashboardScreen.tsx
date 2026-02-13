@@ -11,6 +11,7 @@ import type { DashboardStats } from '../types';
 interface DashboardScreenProps {
   userId: string;
   onSignOut?: () => void;
+  onTabChange?: (tab: string) => void;
 }
 
 const CHART_COLORS = ['#448AFF', '#00D09E', '#FFB340', '#FF5252', '#8B5CF6', '#EC4899', '#F97316', '#6366F1'];
@@ -29,7 +30,7 @@ const MOCK_STATS: DashboardStats = {
 
 const LOAD_TIMEOUT_MS = 10000;
 
-export const DashboardScreen: React.FC<DashboardScreenProps> = ({ userId, onSignOut }) => {
+export const DashboardScreen: React.FC<DashboardScreenProps> = ({ userId, onSignOut, onTabChange }) => {
   const [stats, setStats] = useState<DashboardStats | null>(null);
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
@@ -171,7 +172,7 @@ export const DashboardScreen: React.FC<DashboardScreenProps> = ({ userId, onSign
         <View style={{ height: 20 }} />
       </ScrollView>
 
-      <BottomNav activeTab={activeTab} onTabPress={setActiveTab} />
+      <BottomNav activeTab={activeTab} onTabPress={(tab) => { setActiveTab(tab); onTabChange?.(tab); }} />
     </SafeAreaView>
   );
 };
