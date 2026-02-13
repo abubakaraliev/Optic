@@ -2,8 +2,6 @@ import { supabase } from './supabase';
 import type { Category, Transaction, DashboardStats, CategoryExpense, DateRange } from '../types';
 
 export const databaseService = {
-  // ==================== CATEGORIES ====================
-  
   async getCategories(userId: string): Promise<Category[]> {
     const { data, error } = await supabase
       .from('categories')
@@ -14,40 +12,6 @@ export const databaseService = {
     if (error) throw error;
     return data || [];
   },
-
-  async createCategory(category: Omit<Category, 'id' | 'created_at' | 'updated_at'>): Promise<Category> {
-    const { data, error } = await supabase
-      .from('categories')
-      .insert(category)
-      .select()
-      .single();
-    
-    if (error) throw error;
-    return data;
-  },
-
-  async updateCategory(id: string, updates: Partial<Category>): Promise<Category> {
-    const { data, error } = await supabase
-      .from('categories')
-      .update(updates)
-      .eq('id', id)
-      .select()
-      .single();
-    
-    if (error) throw error;
-    return data;
-  },
-
-  async deleteCategory(id: string): Promise<void> {
-    const { error } = await supabase
-      .from('categories')
-      .delete()
-      .eq('id', id);
-    
-    if (error) throw error;
-  },
-
-  // ==================== TRANSACTIONS ====================
 
   async getTransactions(userId: string, dateRange?: DateRange): Promise<Transaction[]> {
     let query = supabase
@@ -63,44 +27,9 @@ export const databaseService = {
     }
 
     const { data, error } = await query;
-    
     if (error) throw error;
     return data || [];
   },
-
-  async createTransaction(transaction: Omit<Transaction, 'id' | 'created_at'>): Promise<Transaction> {
-    const { data, error } = await supabase
-      .from('transactions')
-      .insert(transaction)
-      .select('*, category:categories(*)')
-      .single();
-    
-    if (error) throw error;
-    return data;
-  },
-
-  async updateTransaction(id: string, updates: Partial<Transaction>): Promise<Transaction> {
-    const { data, error } = await supabase
-      .from('transactions')
-      .update(updates)
-      .eq('id', id)
-      .select('*, category:categories(*)')
-      .single();
-    
-    if (error) throw error;
-    return data;
-  },
-
-  async deleteTransaction(id: string): Promise<void> {
-    const { error } = await supabase
-      .from('transactions')
-      .delete()
-      .eq('id', id);
-    
-    if (error) throw error;
-  },
-
-  // ==================== DASHBOARD ====================
 
   async getDashboardStats(userId: string, month?: Date): Promise<DashboardStats> {
     const targetMonth = month || new Date();
@@ -116,7 +45,6 @@ export const databaseService = {
       const catTransactions = transactions.filter(t => t.category_id === cat.id);
       const spent = catTransactions.reduce((sum, t) => sum + Math.abs(t.amount), 0);
       const budget = cat.budget_limit || 0;
-      
       return {
         categoryId: cat.id,
         categoryName: cat.name,
@@ -129,22 +57,36 @@ export const databaseService = {
 
     const totalExpenses = expensesByCategory.reduce((sum, c) => sum + c.spent, 0);
     const totalBudget = categories.reduce((sum, c) => sum + (c.budget_limit || 0), 0);
-    const resteAVivre = totalBudget - totalExpenses;
 
     return {
       totalExpenses,
       totalBudget,
-      resteAVivre,
+      resteAVivre: totalBudget - totalExpenses,
       expensesByCategory: expensesByCategory.sort((a, b) => b.spent - a.spent)
     };
   },
 
-  // ==================== EXPORT ====================
+  async createTransaction(transaction: Omit<Transaction, 'id' | 'created_at'>) {
+    const { data, error } = await supabase
+      .from('transactions')
+      .insert(transaction)
+      .select('*, category:categories(*)')
+      .single();
+    if (error) throw error;
+    return data;
+  },
+
+  async deleteTransaction(id: string): Promise<void> {
+    const { error } = await supabase
+      .from('transactions')
+      .delete()
+      .eq('id', id);
+    if (error) throw error;
+  },
 
   async exportToCSV(userId: string): Promise<string> {
     const transactions = await this.getTransactions(userId);
     const categories = await this.getCategories(userId);
-    
     const categoryMap = new Map(categories.map(c => [c.id, c.name]));
     
     const headers = ['Date', 'Label', 'Amount', 'Category', 'Payment Method', 'Pending'];

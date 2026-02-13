@@ -25,18 +25,32 @@ const MOCK_STATS: DashboardStats = {
   ]
 };
 
+const LOAD_TIMEOUT_MS = 10000;
+
 export const DashboardScreen: React.FC<DashboardScreenProps> = ({ userId }) => {
   const [stats, setStats] = useState<DashboardStats | null>(null);
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
   const [activeTab, setActiveTab] = useState('dashboard');
+  const [error, setError] = useState<string | null>(null);
 
   const loadStats = async () => {
+    setError(null);
+    console.log('[Dashboard] Loading stats for user:', userId);
+    
     try {
-      const data = await databaseService.getDashboardStats(userId);
-      setStats(data);
-    } catch (error) {
-      console.log('Using demo data');
+      const fetchPromise = databaseService.getDashboardStats(userId);
+      const timeoutPromise = new Promise((_, reject) => 
+        setTimeout(() => reject(new Error('Timeout')), LOAD_TIMEOUT_MS)
+      );
+      
+      const data = await Promise.race([fetchPromise, timeoutPromise]);
+      console.log('[Dashboard] Stats loaded successfully');
+      setStats(data as DashboardStats);
+    } catch (err: unknown) {
+      const errorMessage = err instanceof Error ? err.message : 'Unknown error';
+      console.log('[Dashboard] Error, using demo data:', errorMessage);
+      setError(errorMessage);
       setStats(MOCK_STATS);
     } finally {
       setLoading(false);
@@ -44,7 +58,10 @@ export const DashboardScreen: React.FC<DashboardScreenProps> = ({ userId }) => {
     }
   };
 
-  useEffect(() => { loadStats(); }, [userId]);
+  useEffect(() => { 
+    console.log('[Dashboard] Mounting, loading stats...');
+    loadStats(); 
+  }, [userId]);
 
   const onRefresh = () => { setRefreshing(true); loadStats(); };
 
@@ -58,6 +75,7 @@ export const DashboardScreen: React.FC<DashboardScreenProps> = ({ userId }) => {
     return (
       <SafeAreaView style={styles.loadingContainer}>
         <Text style={styles.loadingText}>Chargement...</Text>
+        <Text style={styles.loadingSubtext}>Connexion à Supabase...</Text>
       </SafeAreaView>
     );
   }
@@ -149,6 +167,7 @@ const styles = StyleSheet.create({
   container: { flex: 1, backgroundColor: '#F8FAFC' },
   loadingContainer: { flex: 1, alignItems: 'center', justifyContent: 'center', backgroundColor: '#F8FAFC' },
   loadingText: { fontSize: 16, color: '#64748B' },
+  loadingSubtext: { fontSize: 12, color: '#94A3B8', marginTop: 8 },
   header: { paddingHorizontal: 20, paddingTop: 16, paddingBottom: 20, backgroundColor: '#FFFFFF' },
   greeting: { fontSize: 14, color: '#64748B', marginBottom: 4 },
   headerTitle: { fontSize: 28, fontWeight: '700', color: '#1E293B' },
