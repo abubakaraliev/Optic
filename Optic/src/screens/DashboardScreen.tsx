@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { View, Text, StyleSheet, ScrollView, RefreshControl, TouchableOpacity } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
+import { Feather } from '@expo/vector-icons';
 import { PieChart } from '../components/PieChart';
 import { ProgressBar } from '../components/ProgressBar';
 import { BottomNav } from '../components/BottomNav';
@@ -19,10 +20,10 @@ const MOCK_STATS: DashboardStats = {
   totalBudget: 2000,
   resteAVivre: 1150,
   expensesByCategory: [
-    { categoryId: '1', categoryName: 'Alimentation', categoryIcon: '🍎', spent: 320, budget: 500, percentage: 64 },
-    { categoryId: '2', categoryName: 'Transport', categoryIcon: '🚗', spent: 180, budget: 200, percentage: 90 },
-    { categoryId: '3', categoryName: 'Logement', categoryIcon: '🏠', spent: 200, budget: 1000, percentage: 20 },
-    { categoryId: '4', categoryName: 'Loisirs', categoryIcon: '🎮', spent: 150, budget: 150, percentage: 100 },
+    { categoryId: '1', categoryName: 'Alimentation', categoryIcon: 'shopping-cart', spent: 320, budget: 500, percentage: 64 },
+    { categoryId: '2', categoryName: 'Transport', categoryIcon: 'truck', spent: 180, budget: 200, percentage: 90 },
+    { categoryId: '3', categoryName: 'Logement', categoryIcon: 'home', spent: 200, budget: 1000, percentage: 20 },
+    { categoryId: '4', categoryName: 'Loisirs', categoryIcon: 'music', spent: 150, budget: 150, percentage: 100 },
   ]
 };
 
@@ -138,7 +139,11 @@ export const DashboardScreen: React.FC<DashboardScreenProps> = ({ userId, onSign
               <View key={item.categoryId} style={styles.categoryItem}>
                 <View style={styles.categoryHeader}>
                   <View style={styles.categoryInfo}>
-                    <View style={[styles.categoryDot, { backgroundColor: CHART_COLORS[index % CHART_COLORS.length] }]} />
+                    <Feather 
+                      name={item.categoryIcon as any} 
+                      size={18} 
+                      color={CHART_COLORS[index % CHART_COLORS.length]} 
+                    />
                     <Text style={styles.categoryName}>{item.categoryName}</Text>
                   </View>
                   <Text style={styles.categoryAmount}>{item.spent.toFixed(0)}€ / {item.budget.toFixed(0)}€</Text>

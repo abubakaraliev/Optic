@@ -1,5 +1,7 @@
 import React, { useState } from 'react';
-import { View, Text, TextInput, TouchableOpacity, StyleSheet, SafeAreaView, KeyboardAvoidingView, Platform, ScrollView } from 'react-native';
+import { View, Text, TextInput, TouchableOpacity, StyleSheet, KeyboardAvoidingView, Platform, ScrollView } from 'react-native';
+import { SafeAreaView } from 'react-native-safe-area-context';
+import { Feather } from '@expo/vector-icons';
 
 interface AuthScreenProps {
   onAuthSuccess: (userId: string) => void;
@@ -40,7 +42,10 @@ export const AuthScreen: React.FC<AuthScreenProps> = ({ onAuthSuccess }) => {
       >
         <ScrollView contentContainerStyle={styles.scrollContent}>
           <View style={styles.header}>
-            <Text style={styles.logo}>💰 Optic</Text>
+            <View style={styles.logoContainer}>
+            <Feather name="shield" size={36} color="#1E293B" />
+            <Text style={styles.logo}> Optic</Text>
+          </View>
             <Text style={styles.subtitle}>
               {isLogin ? 'Connexion à votre compte' : 'Créer un compte'}
             </Text>
@@ -134,11 +139,15 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     marginBottom: 40,
   },
+  logoContainer: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    marginBottom: 8,
+  },
   logo: {
     fontSize: 36,
     fontWeight: '700',
     color: '#1E293B',
-    marginBottom: 8,
   },
   subtitle: {
     fontSize: 16,

@@ -1,10 +1,11 @@
 import React from 'react';
 import { View, Text, TouchableOpacity, StyleSheet } from 'react-native';
+import { Feather } from '@expo/vector-icons';
 
 interface TabItem {
   key: string;
   label: string;
-  icon: string;
+  icon: keyof typeof Feather.glyphMap;
 }
 
 interface BottomNavProps {
@@ -13,10 +14,10 @@ interface BottomNavProps {
 }
 
 const TABS: TabItem[] = [
-  { key: 'dashboard', label: 'Accueil', icon: '⬡' },
-  { key: 'transactions', label: 'Transactions', icon: '☰' },
-  { key: 'budgets', label: 'Budgets', icon: '◉' },
-  { key: 'settings', label: 'Paramètres', icon: '⚙' },
+  { key: 'dashboard', label: 'Accueil', icon: 'home' },
+  { key: 'transactions', label: 'Transactions', icon: 'list' },
+  { key: 'budgets', label: 'Budgets', icon: 'pie-chart' },
+  { key: 'settings', label: 'Paramètres', icon: 'settings' },
 ];
 
 export const BottomNav: React.FC<BottomNavProps> = ({ activeTab, onTabPress }) => {
@@ -29,9 +30,11 @@ export const BottomNav: React.FC<BottomNavProps> = ({ activeTab, onTabPress }) =
           onPress={() => onTabPress(tab.key)}
           activeOpacity={0.7}
         >
-          <Text style={[styles.icon, activeTab === tab.key && styles.activeIcon]}>
-            {tab.icon}
-          </Text>
+          <Feather 
+            name={tab.icon} 
+            size={20} 
+            color={activeTab === tab.key ? '#00D09E' : '#94A3B8'} 
+          />
           <Text style={[styles.label, activeTab === tab.key && styles.activeLabel]}>
             {tab.label}
           </Text>
@@ -61,14 +64,6 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     paddingVertical: 8,
     position: 'relative',
-  },
-  icon: {
-    fontSize: 20,
-    color: '#94A3B8',
-    marginBottom: 4,
-  },
-  activeIcon: {
-    color: '#00D09E',
   },
   label: {
     fontSize: 11,
